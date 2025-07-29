@@ -5,7 +5,32 @@ const DamageRelations = ({ damages }) => {
     const arrayDamage = damages.map((damage) =>
       separateObjectBetweenToAndFrom(damage)
     );
+
+    if (arrayDamage.length === 2) {
+      // 합치는 부분
+    } else {
+      postDamageValue(arrayDamage[0].from);
+    }
   }, []);
+
+  const postDamageValue = (props) => {
+    const result = Object.entries(props).reduce((acc, [keyName, value]) => {
+      const key = keyName;
+
+      const valuesOfKeyName = {
+        double_damage: "2x",
+        half_damage: "1/2",
+        no_damage: "0x",
+      };
+      return (acc = {
+        [keyName]: value.map((i) => ({
+          damageValue: valuesOfKeyName[key],
+          ...i,
+        })),
+      });
+    }, {});
+    console.log(result);
+  };
 
   const separateObjectBetweenToAndFrom = (damage) => {
     const from = filterDamageRelations("_from", damage);
@@ -29,7 +54,6 @@ const DamageRelations = ({ damages }) => {
     return result;
   };
 
-  console.log(damages);
   return <div>DamageRelations</div>;
 };
 
