@@ -10,10 +10,13 @@ import { Vector } from "../../assets/Vector";
 import Type from "../../components/Type";
 import BaseStat from "../../components/BaseStat";
 import DamageRelations from "../../components/DamageRelations";
+import DamageModal from "../../components/DamageModal";
 
 const DetailPage = () => {
   const [pokemon, setPokemon] = useState();
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const params = useParams();
   const pokemonId = params.id;
@@ -29,7 +32,7 @@ const DetailPage = () => {
       const { data: pokemonData } = await axios.get(url);
 
       if (pokemonData) {
-        const { name, id, types, weight, height, stats, abilities } =
+        const { name, id, types, weight, height, stats, abilities, sprites } =
           pokemonData;
         const nextAndPreviousPokemon = await getNextAndPreviousPokemon(id);
 
@@ -51,6 +54,8 @@ const DetailPage = () => {
           stats: formatPokemonStats(stats),
           DamageRelations,
           types: types.map((type) => type.type.name),
+          sprites: formatPokemonSprites(sprites),
+          description: getPokemonDescription(id),
         };
 
         setPokemon(formattedPokemonData);
@@ -61,6 +66,32 @@ const DetailPage = () => {
       setIsLoading(false);
     }
   }
+
+  const filterAndFormatDescription = (flavorText) => {
+    const koreanDescriptions = flavorText
+      ?.filter((text) => text.language.name === "ko")
+      .map((text) => text.flavor_text.replace(/\r|\n|\f/g, " "));
+    console.log(koreanDescriptions);
+  };
+
+  const getPokemonDescription = async (id) => {
+    const url = `https://pokeapi.co/api/v2/pokemon-species/${id}`;
+
+    const { data: pokemonSpecies } = await axios.get(url);
+
+    filterAndFormatDescription(pokemonSpecies.flavor_text_entries);
+  };
+
+  const formatPokemonSprites = (sprites) => {
+    const newSprites = { ...sprites };
+
+    Object.keys(newSprites).forEach((key) => {
+      if (typeof newSprites[key] !== "string") {
+        delete newSprites[key];
+      }
+    });
+    return Object.values(newSprites);
+  };
 
   const formatPokemonStats = ([
     statHP,
@@ -162,6 +193,7 @@ const DetailPage = () => {
               loading="lazy"
               alt={pokemon.name}
               className={`object-contain h-full`}
+              onClick={() => setIsModalOpen(true)}
             />
           </div>
         </section>
@@ -219,16 +251,19 @@ const DetailPage = () => {
             </table>
           </div>
 
-          {pokemon.DamageRelations && (
-            <div className="w-10/12">
-              <h2 className={`text-base text-center font-semibole ${text}`}>
-                <DamageRelations damages={pokemon.DamageRelations} />
-              </h2>
-              데미지
-            </div>
-          )}
+          <div className="flex my-8 flex-wrap justify-center">
+            {pokemon.sprites.map((url, index) => (
+              <img key={index} src={url} alt="sprite" />
+            ))}
+          </div>
         </section>
       </div>
+      {isModalOpen && (
+        <DamageModal
+          setIsModalOpen={setIsModalOpen}
+          damages={pokemon.DamageRelations}
+        />
+      )}
     </article>
   );
 };
