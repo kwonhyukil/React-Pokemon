@@ -14,7 +14,7 @@ import DamageModal from "../../components/DamageModal";
 
 const DetailPage = () => {
   const [pokemon, setPokemon] = useState();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -23,11 +23,12 @@ const DetailPage = () => {
   const baseurl = `https://pokeapi.co/api/v2/pokemon/`;
 
   useEffect(() => {
-    fetchPokemonData();
-  }, []);
+    setIsLoading(true);
+    fetchPokemonData(pokemonId);
+  }, [pokemonId]);
 
-  async function fetchPokemonData() {
-    const url = `${baseurl}${pokemonId}`;
+  async function fetchPokemonData(id) {
+    const url = `${baseurl}${id}`;
     try {
       const { data: pokemonData } = await axios.get(url);
 
@@ -49,13 +50,13 @@ const DetailPage = () => {
           weight: weight / 10,
           height: height / 10,
           previous: nextAndPreviousPokemon.previous,
-          next: nextAndPreviousPokemon,
+          next: nextAndPreviousPokemon.next,
           abilities: formatPokemonAbilities(abilities),
           stats: formatPokemonStats(stats),
           DamageRelations,
           types: types.map((type) => type.type.name),
           sprites: formatPokemonSprites(sprites),
-          description: getPokemonDescription(id),
+          description: await getPokemonDescription(id),
         };
 
         setPokemon(formattedPokemonData);
@@ -71,7 +72,7 @@ const DetailPage = () => {
     const koreanDescriptions = flavorText
       ?.filter((text) => text.language.name === "ko")
       .map((text) => text.flavor_text.replace(/\r|\n|\f/g, " "));
-    console.log(koreanDescriptions);
+    return koreanDescriptions;
   };
 
   const getPokemonDescription = async (id) => {
@@ -79,7 +80,11 @@ const DetailPage = () => {
 
     const { data: pokemonSpecies } = await axios.get(url);
 
-    filterAndFormatDescription(pokemonSpecies.flavor_text_entries);
+    const descriptions = filterAndFormatDescription(
+      pokemonSpecies.flavor_text_entries
+    );
+
+    return descriptions[Math.floor(Math.random() * descriptions.length)];
   };
 
   const formatPokemonSprites = (sprites) => {
@@ -250,6 +255,11 @@ const DetailPage = () => {
               </tbody>
             </table>
           </div>
+
+          <h2 className={`text-base font-semibold ${text}`}>설명</h2>
+          <p className="text-md leading-4 font-sans text-zinc-200 max-w-[30rem] text-center">
+            {pokemon.description}
+          </p>
 
           <div className="flex my-8 flex-wrap justify-center">
             {pokemon.sprites.map((url, index) => (
