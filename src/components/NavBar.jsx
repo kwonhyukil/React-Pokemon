@@ -20,7 +20,7 @@ const NavBar = () => {
 
   const [show, setShow] = useState(false);
 
-  const [userData, setUserData] = useState({ initialUserData });
+  const [userData, setUserData] = useState(initialUserData);
 
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -33,7 +33,6 @@ const NavBar = () => {
         navigate("/");
       }
     });
-
     return () => {
       unsubscribe();
     };
@@ -70,6 +69,7 @@ const NavBar = () => {
     signOut(auth)
       .then(() => {
         setUserData({});
+        localStorage.removeItem("userData");
       })
       .catch((error) => {
         alert(error.message);
